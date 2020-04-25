@@ -1,6 +1,6 @@
 EstrogensAndCognition1R
 
-This project analyses data from the estrogens and cognition study (E&C). The aim of this project is to analyse data to discern if there is a gene x environment interaction that affects memory in women who have undergone a bilateral salpingo oophorectomy. Specifically, we are looking to see how the body's estrogen levels and Val/Met polymorphisms of the COMT (Val158Met) and BDNF (Val66Met) genes impact memory. 
+This project analyses data to discern if there is a gene x environment interaction that affects memory in women who have undergone a bilateral salpingo oophorectomy. Specifically, we are looking to see how the body's estrogen levels and Val/Met polymorphisms of the COMT (Val158Met) and BDNF (Val66Met) genes impact memory. 
 
 Step 1: Set the working directory 
 ```
@@ -79,36 +79,41 @@ If necessary, you can also set your white spaces into N/As.
 dataset_new[dataset_new == ""] <- NA
 View(dataset_new)
 ```
-
+Step 4: The BDNF data size is not that large, so merge the Heterozygotes and the Met Homozygotes into a single Met carrier category. Use the | operator to mean or
+```
 # Adding BDNF Met Carriers to the dataset ----
 dataset_new$BDNF_combined[dataset_new$BDNF == "Val"] <- "Val"
 dataset_new$BDNF_combined[dataset_new$BDNF == "Het" | dataset_new$BDNF == "Met"] <- "Met_carrier"
-
-#use clean_data as a dataset
-
+```
+Rename dataset_new at clean_data
+```
+clean_data <- dataset_new
 clean_data <- read.csv("clean_data.csv")
+```
 
-clean_data <-  dataset_new 
-
-# Group Counts for demographics table ---- 
-
-# Use the %>% (pipe operator) to simplify code which can otherwise have a lot of parentheses!
-
+Step 5: Get counts for demographic data table
+Operators and Functions:
+Use the %>% (pipe operator) to simplify code which can otherwise have a lot of parentheses!
+Use the group_by function to group the data by a single category/variable
+Use the tally() function to count the number of data points within the particular group you have created
+```
 clean_data %>% group_by(group_membership) %>% tally()
+#get a tally for the COMT numbers
 clean_data %>% group_by(group_membership, COMT) %>% tally()
-# get a tally for BDNF numbers 
+#get a tally for BDNF numbers 
 clean_data %>% group_by(group_membership, BDNF_combined) %>% tally()
-# get a tally for the APOE #s
+#get a tally for the APOE #s
 clean_data %>% group_by(group_membership, e4) %>% tally()
 #get a tally for the PdG numbers 
 clean_data %>% group_by(group_membership, PdG) %>% tally()
 #get a tally for the cancner numbers
 clean_data %>% group_by(group_membership, Cancer_Treatments) %>% tally()
+```
+Step 6: Calculate the mean and standard error for the demographic groups
+Standard error = SD / sqrt(n-1)
+Introducing the sem calculation into the summarize funtion makes your life a lot easier - eliminates many lines of code!
 
-
-# Standard error = SD / sqrt(n-1)
-# Introducing the sem calculation into the summarize funtion makes your life a lot easier - eliminates many lines of code!
-
+```
 View(clean_data)
 clean_data %>% group_by(group_membership) %>% summarize(mean=mean(E1G, na.rm = T),
                                                         sd=sd(E1G, na.rm = T),
@@ -142,10 +147,9 @@ clean_data %>% group_by(group_membership) %>% summarize(mean=mean(PdG, na.rm = T
                                                         sd=sd(PdG, na.rm = T),
                                                         n=length(Group),
                                                         sem=sd(PdG, na.rm = T)/sqrt(n-1)) 
-
-# Group comparison tests for demo ---- 
-# One factorial ANOVA
-
+```
+Step 7: Group comparison tests for the demographic data. Create a one factorial ANOVA for each group to see if there are any significant differences between groups 
+```
 #Age
 attach(clean_data)
 Age.aov<-aov(Age~group_membership)
@@ -165,10 +169,14 @@ leveneTest(Cancer_Treatments~group_membership) #Assess the quality of the varian
 #Extract the residuals
 Cancer_Treatments_aovresiduals <- residuals(object = Cancer_Treatment.aov)
 shapiro.test(x = Cancer_Treatments_aovresiduals)
-
+```
+If the differences are significant run a Kruskal-Wallis Rank Sum Test to clarify if the differences are significant.
+```
 #Is significant so run a Kurskal-Wallis Rank Sum Test
 kruskal.test(Cancer_Treatments~group_membership)
-
+```
+The post hoc test for the Kruskal-Wallis test is the Dunn test.
+```
 # Post-hoc for KW is the Dunn Test 
 clean_data$group_membership = factor(clean_data$group_membership,
                                      levels=c("AMC", "BSO", "BSO-E2"))
@@ -177,8 +185,9 @@ PT = dunnTest(Cancer_Treatments ~ group_membership,
               data=clean_data,
               method="bonferroni")    
 PT
-
-
+```
+Continue the group comparison tests
+```
 #MenopauseAge test
 Menopause.aov<-aov(MenopauseAge~group_membership)
 summary(Menopause.aov)
@@ -233,10 +242,9 @@ PT = dunnTest(E1G ~ group_membership,
               data=clean_data,
               method="bonferroni")    
 PT
-#Make graphs
-
-#Compute ANOVA between two independent variables, genotype and group membership
-#Since the samples sizes in the groups are uneven, you ned to do an unbalanced two way ANOVA
+```
+Step 8: Compute a two factorial ANOVA between two independent variables, genotype and group membership
+Since the samples sizes in the groups are uneven, you need to do an unbalanced two way ANOVA
 
 #When you run a linear model, there are some missing values in the COMT column. Remove those missing values
 clean_data$COMT2 <- factor(clean_data$COMT, exclude = "", levels = c("Met","Het","Val"))
