@@ -1,6 +1,9 @@
-# EstrogensAndCognition1R
+EstrogensAndCognition1R
 
+This project analyses data from the estrogens and cognition study (E&C). The aim of this project is to analyse data to discern if there is a gene x environment interaction that affects memory in women who have undergone a bilateral salpingo oophorectomy. Specifically, we are looking to see how the body's estrogen levels and Val/Met polymorphisms of the COMT (Val158Met) and BDNF (Val66Met) genes impact memory. 
 
+Step 1: Set the working directory 
+```
 getwd()
 #setwd("C:/Users/RA/Desktop/Aanya Data")
 setwd("/Volumes/EC_RAs/Aanya - COMTBDNF/Aanya Data/")
@@ -8,7 +11,11 @@ dir()
 genotype_data <- read.csv("Genotype Data.csv")
 neuro_data <- read.csv("SOLVED Neuro Data January 22 2020.csv")
 dataset <- merge(genotype_data, neuro_data, by="ID")
+```
 
+Step 2: Install packages
+I find that installing packages in the beginning of your code makes it cleaner 
+```
 # Install packages -----
 install.packages("carData")
 install.packages ("car")
@@ -21,8 +28,9 @@ install.packages("afex")
 install.packages("knitr")
 install.packages("arsenal")
 install.packages("magrittr")
-
-
+```
+Don't forget to load your packages for each new session!
+```
 # Load packages ---- 
 library(carData)
 library(car)
@@ -36,21 +44,41 @@ library(afex)
 library(knitr)
 library(arsenal) 
 library(magrittr) 
+```
+Step 3: Assign your group names! 
 
-# Assigning Groups ----
+The BSO category should include women who have undergone a BSO and have never taken estradiol therapy
+```
 dataset$group_membership[dataset$Group == 1 & dataset$HRTever == 0] <- "BSO"
+```
+The BSO-E2 category should include women who have undergone a BSO, have ever taken hormone therapy, and are taking it now
+```
 dataset$group_membership[dataset$Group == 1 & dataset$HRTever == 1 & dataset$E2now == 1] <- "BSO-E2"
+```
+The aged matched controls (AMC) group should iclude women who are age matched controls and have never taken hormone therapy
+```
 dataset$group_membership[dataset$Group == 3 & dataset$HRTever == 0] <- "AMC"
+```
+However, people who have taken hormone therapy in the past should be excluded from teh AMC and BSO categories. Create a new group for them.
+```
 dataset$group_membership[dataset$Group == 1 & dataset$HRTever == 1 & dataset$HRTnow == 0] <- "BSO_HRT_Past"
+```
+Use the subset() function to select and exclude variables. The ! operator means 'is not equal to'. The following line of code is used to look for all the data in the data set (by use of subset()) that is not equal to women who have undergone hormone therapy in the past (BSO_HRT_Past). You are then creating a new dataset from these values, called dataset_new
+```
 dataset_new <- subset(dataset, !group_membership=="BSO_HRT_Past")
+```
+Remove all the N/A cells from the data with the !is.na() function.
+```
 dataset_new <- dataset_new[!is.na(dataset_new$group_membership),]
 dataset_new <- dataset_new[!is.na(dataset_new$ID),]
 dataset_new <- dataset_new[!is.na(dataset_new$SPWM_WME_T1),]
-#View(dataset_new)
-
-#Set white spaces into NAs
-#dataset_new[dataset_new == ""] <- NA
-#View(dataset_new)
+View(dataset_new)
+```
+If necessary, you can also set your white spaces into N/As.
+```
+dataset_new[dataset_new == ""] <- NA
+View(dataset_new)
+```
 
 # Adding BDNF Met Carriers to the dataset ----
 dataset_new$BDNF_combined[dataset_new$BDNF == "Val"] <- "Val"
