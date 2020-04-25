@@ -244,60 +244,59 @@ PT = dunnTest(E1G ~ group_membership,
 PT
 ```
 Step 8: Compute a two factorial ANOVA between two independent variables, genotype and group membership
-Since the samples sizes in the groups are uneven, you need to do an unbalanced two way ANOVA
+Since the samples sizes in the groups are uneven, you need to do an unbalanced two way ANOVA on a linear model 
 
-#When you run a linear model, there are some missing values in the COMT column. Remove those missing values
+But when you run a linear model lm(), there are some missing values in the COMT column. Remove those missing values.
+```
 clean_data$COMT2 <- factor(clean_data$COMT, exclude = "", levels = c("Met","Het","Val"))
-
-#Remove missing values for in the BDNF column too
+```
+Remove missing values for in the BDNF column too
+```
 clean_data$BDNF2 <- factor(clean_data$BDNF, exclude = "", c("Met_carrier", "Val"))
+```
+Run a type 3 two factorial ANOVA using the Anova() function from the car package. (There are 3 types of two way ANOVAs, type 3 is the easiest). But first change the default settings.
+First, check the contrasts. What are the contrasts? It shows how one group is compared to another group. 
+Each type of contrast will give you a different sum of squares. The default setting is contr.treatment(for unordered data) and contr.poly(for ordered data). Wen you open R and you check the contrasts, it'll show you treatment (contr.treatment) and poly (contr.poly). 
+You need to set it to contr.sum and contr.poly. This has been done below, for each test. You can't use treatment because the tests wont give you sensible results. This information is in the help file of the car package(According to the person who made it in car)
 
-#First, check the contrasts. What are the contrasts? It shows how one group is compared to another group. 
-#Each type of contrast will give you a different sum of squares. The default setting is contr.treatment(for unordered data) and contr.poly(for ordered data)
-#when you open R and you check the contrasts, it'll show you treatment and poly. 
-#You need to set it to contr.sum and contr.poly. You can't use treatment because the tests wont give you sensible results. This is in the help file(According to the person who made it in car)
-
-#The data is already sorted intro reference groups. The reference group is what the other groups are compared to. Use the following code to change the reference groups
+Secondly, the data is already sorted intro reference groups. The reference group is what the other groups are compared to. Use the following code to change the reference groups
+```
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("AMC","BSO-E2","BSO")) #to make AMC the reference group
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("BSO","BSO-E2","AMC")) #to make BSO the reference group
+```
 
+If you'd like to save the results from your ANOVA tables onto a work document, used the following code:
+```
+knitr::kable(nice(ancova_RAVLTlearn))%>%   
+  write2word(file="RAVLTlearn.doc", quiet = TRUE)
+```  
+See this website, https://cran.r-project.org/web/packages/arsenal/vignettes/write2.html#introduction
 
-knitr::kable(nice(ancova_RAVLTlearn))%>%  # this code allows you to save out your table directly in a word doc 
-  write2word(file="RAVLTlearn.doc", quiet = TRUE) # see this website, https://cran.r-project.org/web/packages/arsenal/vignettes/write2.html#introduction
-
-
+In the code below, an ANOVA is being run on a linear model. Since there was a significant difference in the proportion of study participants with a history of cancer treatments, this variable has been added to the ANOVA as a predictor variable.
+```
 # Two factorial ANOVAs -----
 
 options()$contrasts #to check the contrasts
 options(contrasts = c("contr.sum","contr.poly"))
 Anova(lm(SPWM_WME_T1 ~ COMT2 * group_membership + Cancer_Treatments, data = clean_data), type = 3)
+```
 
-#Since results are significant, run post hoc test
-#The TukeyHSD function is only for aov, it cannot be used on the Anova function
-#Run a linear regression to see where the differences in the groups is
-#Don't forget to change the contrasts back to treatment and poly! (the default)
+If results are significant, run post hoc test. Unfortunately, the TukeyHSD function is only for aov(), it cannot be used on the Anova() function. Therefore, run a linear regression to see where the differences in the groups is.
+Don't forget to change the contrasts back to treatment and poly! (the default)
 
+```
 options(contrasts = c("contr.treatment", "contr.poly"))
 COMT_SPWM <- lm(SPWM_WME_T1 ~ COMT2 * group_membership + Cancer_Treatments, data = clean_data)
 summary(COMT_SPWM)
+```
 
-#Results: 
-#COMT2Val: The difference between Val and Het is significant in AMCs
-#group_membershipBSO-E2: The difference between BSO-E2 and AMCs is significant for Het 
-#COMT2Val:group_membershipBSO-E2: The interaction term, the difference of the differences
-
-#My interpretation: difference between Vals in BSO and BSO-E2 (in this case the constant is the val)
-
-#Het and AMCs are the reference groups here. To check reference groups, use contrasts function
+Het and AMCs are the reference groups here. To check reference groups, use contrasts function
+```
 contrasts(clean_data$group_membership)
 clean_data$COMT2 <- factor(clean_data$COMT2, levels = c("Het","Met","Val"))
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("AMC","BSO-E2","BSO"))
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("BSO","BSO-E2","AMC"))
-
-#Since the value for AMC is 0 in both BSO and BSO-E2, it is the reference group
-contrasts(clean_data$COMT2)
-#Since the value for Het is 0 in both Met and Val, it is the reference group 
-# Makes more sense if the reference group is Met (we want to compare the Met to Val)
+```
 
 #I want to know if DigitsForward scores have an effect on COMT genotype and group membership
 
