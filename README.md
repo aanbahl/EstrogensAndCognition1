@@ -14,7 +14,8 @@ dataset <- merge(genotype_data, neuro_data, by="ID")
 ```
 
 Step 2: Install packages
-I find that installing packages in the beginning of your code makes it cleaner 
+
+(I find that installing packages in the beginning of your code makes it cleaner) 
 ```
 # Install packages -----
 install.packages("carData")
