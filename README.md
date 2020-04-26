@@ -48,27 +48,29 @@ library(magrittr)
 ```
 Step 3: Assign your group names! 
 
-The BSO category should include women who have undergone a BSO and have never taken estradiol therapy
+The BSO category should include women who have undergone a BSO and have never taken estradiol therapy.
 ```
 dataset$group_membership[dataset$Group == 1 & dataset$HRTever == 0] <- "BSO"
 ```
-The BSO-E2 category should include women who have undergone a BSO, have ever taken hormone therapy, and are taking it now
+The BSO-E2 category should include women who have undergone a BSO, have ever taken hormone therapy, and are taking it now.
 ```
 dataset$group_membership[dataset$Group == 1 & dataset$HRTever == 1 & dataset$E2now == 1] <- "BSO-E2"
 ```
-The aged matched controls (AMC) group should iclude women who are age matched controls and have never taken hormone therapy
+The aged matched controls (AMC) group should iclude women who are age matched controls and have never taken hormone therapy.
 ```
 dataset$group_membership[dataset$Group == 3 & dataset$HRTever == 0] <- "AMC"
 ```
-However, people who have taken hormone therapy in the past should be excluded from teh AMC and BSO categories. Create a new group for them.
+However, people who have taken hormone therapy in the past should be excluded from the AMC and BSO categories. Create a new group for them.
 ```
 dataset$group_membership[dataset$Group == 1 & dataset$HRTever == 1 & dataset$HRTnow == 0] <- "BSO_HRT_Past"
 ```
-Use the subset() function to select and exclude variables. The ! operator means 'is not equal to'. The following line of code is used to look for all the data in the data set (by use of subset()) that is not equal to women who have undergone hormone therapy in the past (BSO_HRT_Past). You are then creating a new dataset from these values, called dataset_new
+Use the ```subset()``` function to select and exclude variables. The ```!``` operator means 'is not equal to'. 
+
+The following line of code looks for all the data in the dataset (by use of subset()) that is not equal to women who have undergone hormone therapy in the past (```BSO_HRT_Past```). You are then creating a new dataset from these values, called ```dataset_new```.
 ```
 dataset_new <- subset(dataset, !group_membership=="BSO_HRT_Past")
 ```
-Remove all the N/A cells from the data with the !is.na() function.
+Remove all the N/A cells from the data with the ```!is.na()``` function.
 ```
 dataset_new <- dataset_new[!is.na(dataset_new$group_membership),]
 dataset_new <- dataset_new[!is.na(dataset_new$ID),]
