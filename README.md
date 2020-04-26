@@ -82,23 +82,27 @@ If necessary, you can also set your white spaces into N/As.
 dataset_new[dataset_new == ""] <- NA
 View(dataset_new)
 ```
-Step 4: The BDNF data size is not that large, so merge the Heterozygotes and the Met Homozygotes into a single Met carrier category. Use the | operator to mean or
+Step 4: The BDNF data size is not that large, so merge the Heterozygotes and the Met Homozygotes into a single Met carrier category. Use the ```|``` operator to code for 'or'
 ```
 # Adding BDNF Met Carriers to the dataset ----
 dataset_new$BDNF_combined[dataset_new$BDNF == "Val"] <- "Val"
 dataset_new$BDNF_combined[dataset_new$BDNF == "Het" | dataset_new$BDNF == "Met"] <- "Met_carrier"
 ```
-Rename dataset_new at clean_data
+Rename ```dataset_new``` as ```clean_data```
 ```
 clean_data <- dataset_new
 clean_data <- read.csv("clean_data.csv")
 ```
 
 Step 5: Get counts for demographic data table
+
 Operators and Functions:
-Use the %>% (pipe operator) to simplify code which can otherwise have a lot of parentheses!
-Use the group_by function to group the data by a single category/variable
-Use the tally() function to count the number of data points within the particular group you have created
+
+Use the ```%>%``` (pipe operator) to simplify code which can otherwise have a lot of parentheses!
+
+Use the ```group_by``` function to group the data by a single category/variable
+
+Use the ```tally()``` function to count the number of data points within the particular group you have created
 ```
 clean_data %>% group_by(group_membership) %>% tally()
 #get a tally for the COMT numbers
@@ -112,9 +116,11 @@ clean_data %>% group_by(group_membership, PdG) %>% tally()
 #get a tally for the cancner numbers
 clean_data %>% group_by(group_membership, Cancer_Treatments) %>% tally()
 ```
-Step 6: Calculate the mean and standard error for the demographic groups
+Step 6: Calculate the mean and standard error for the demographic groups.
+
 Standard error = SD / sqrt(n-1)
-Introducing the sem calculation into the summarize funtion makes your life a lot easier - eliminates many lines of code!
+
+Introducing the ```sem``` calculation into the summarize funtion makes your life a lot easier - eliminates many lines of code!
 
 ```
 View(clean_data)
@@ -151,7 +157,7 @@ clean_data %>% group_by(group_membership) %>% summarize(mean=mean(PdG, na.rm = T
                                                         n=length(Group),
                                                         sem=sd(PdG, na.rm = T)/sqrt(n-1)) 
 ```
-Step 7: Group comparison tests for the demographic data. Create a one factorial ANOVA for each group to see if there are any significant differences between groups 
+Step 7: Group comparison tests for the demographic data. Create a one factorial ANOVA for each group to see if there are any significant differences between groups. 
 ```
 #Age
 attach(clean_data)
@@ -173,12 +179,12 @@ leveneTest(Cancer_Treatments~group_membership) #Assess the quality of the varian
 Cancer_Treatments_aovresiduals <- residuals(object = Cancer_Treatment.aov)
 shapiro.test(x = Cancer_Treatments_aovresiduals)
 ```
-If the differences are significant run a Kruskal-Wallis Rank Sum Test to clarify if the differences are significant.
+If the differences are significant, run a Kruskal-Wallis Rank Sum Test to clarify that the differences are significant.
 ```
 #Is significant so run a Kurskal-Wallis Rank Sum Test
 kruskal.test(Cancer_Treatments~group_membership)
 ```
-The post hoc test for the Kruskal-Wallis test is the Dunn test.
+The post-hoc test for the Kruskal-Wallis test is the Dunn test.
 ```
 # Post-hoc for KW is the Dunn Test 
 clean_data$group_membership = factor(clean_data$group_membership,
@@ -189,7 +195,7 @@ PT = dunnTest(Cancer_Treatments ~ group_membership,
               method="bonferroni")    
 PT
 ```
-Continue the group comparison tests
+Continue the group comparison tests.
 ```
 #MenopauseAge test
 Menopause.aov<-aov(MenopauseAge~group_membership)
@@ -246,34 +252,36 @@ PT = dunnTest(E1G ~ group_membership,
               method="bonferroni")    
 PT
 ```
-Step 8: Compute a two factorial ANOVA between two independent variables, genotype and group membership
-Since the samples sizes in the groups are uneven, you need to do an unbalanced two way ANOVA on a linear model 
+Step 8: Compute a two factorial ANOVA between two independent variables, genotype and group membership.
 
-But when you run a linear model lm(), there are some missing values in the COMT column. Remove those missing values.
+Since the samples sizes in the groups are uneven, you need to do an unbalanced two way ANOVA on a linear model. 
+
+But when you run a linear model ```lm()```, there are some missing values in the COMT column. Remove those missing values.
 ```
 clean_data$COMT2 <- factor(clean_data$COMT, exclude = "", levels = c("Met","Het","Val"))
 ```
-Remove missing values for in the BDNF column too
+Remove missing values for in the BDNF column too.
 ```
 clean_data$BDNF2 <- factor(clean_data$BDNF, exclude = "", c("Met_carrier", "Val"))
 ```
-Run a type 3 two factorial ANOVA using the Anova() function from the car package. (There are 3 types of two way ANOVAs, type 3 is the easiest). But first change the default settings.
-First, check the contrasts. What are the contrasts? It shows how one group is compared to another group. 
-Each type of contrast will give you a different sum of squares. The default setting is contr.treatment(for unordered data) and contr.poly(for ordered data). Wen you open R and you check the contrasts, it'll show you treatment (contr.treatment) and poly (contr.poly). 
-You need to set it to contr.sum and contr.poly. This has been done below, for each test. You can't use treatment because the tests wont give you sensible results. This information is in the help file of the car package(According to the person who made it in car)
+Run a type 3 two factorial ANOVA using the ```Anova()``` function from the ```car``` package. (There are 3 types of two way ANOVAs, type 3 is the easiest). However, you need to change the default settings before starting.
 
-Secondly, the data is already sorted intro reference groups. The reference group is what the other groups are compared to. Use the following code to change the reference groups
+First, check the contrasts. What are the contrasts? Contrasts show how one group is compared to another group. 
+
+Each type of contrast will give you a different sum of squares. The default setting is ```contr.treatment```(for unordered data) and ```contr.poly```(for ordered data). When you open R and you check the contrasts, it'll show you treatment (```contr.treatment```) and poly (```contr.poly```). 
+You need to set it to ```contr.sum``` and ```contr.poly```. (This has been done below for each test). According to the creator of the ```car``` package, you can't use the treatment setting because the tests wont give you sensible results. This information can be found in the help file of the ```car``` package.
+
+Secondly, the data is already sorted into reference groups. The reference group is what the other groups are compared to. Use the following code to change the reference groups:
 ```
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("AMC","BSO-E2","BSO")) #to make AMC the reference group
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("BSO","BSO-E2","AMC")) #to make BSO the reference group
 ```
-
-If you'd like to save the results from your ANOVA tables onto a work document, used the following code:
+If you'd like to save the results from your ANOVA tables onto a work document, use the following code:
 ```
-knitr::kable(nice(ancova_RAVLTlearn))%>%   
+knitr::kable(nice(COMT_SPWM))%>%   
   write2word(file="RAVLTlearn.doc", quiet = TRUE)
 ```  
-See this website, https://cran.r-project.org/web/packages/arsenal/vignettes/write2.html#introduction
+For more information, see this website, https://cran.r-project.org/web/packages/arsenal/vignettes/write2.html#introduction
 
 In the code below, an ANOVA is being run on a linear model. Since there was a significant difference in the proportion of study participants with a history of cancer treatments, this variable has been added to the ANOVA as a predictor variable.
 ```
@@ -284,7 +292,8 @@ options(contrasts = c("contr.sum","contr.poly"))
 Anova(lm(SPWM_WME_T1 ~ COMT2 * group_membership + Cancer_Treatments, data = clean_data), type = 3)
 ```
 
-If results are significant, run post hoc test. Unfortunately, the TukeyHSD function is only for aov(), it cannot be used on the Anova() function. Therefore, run a linear regression to see where the differences in the groups is.
+If results are significant, run post hoc test. Unfortunately, the ```TukeyHSD``` function can only be applied after the ```aov()``` function, it cannot be used after the ```Anova()``` function. Therefore, run a linear regression to see where the differences in the groups is.
+
 Don't forget to change the contrasts back to treatment and poly! (the default)
 
 ```
@@ -300,14 +309,13 @@ clean_data$COMT2 <- factor(clean_data$COMT2, levels = c("Het","Met","Val"))
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("AMC","BSO-E2","BSO"))
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("BSO","BSO-E2","AMC"))
 ```
-
-#I want to know if DigitsForward scores have an effect on COMT genotype and group membership
+Continue conducting comparisons for all the other test scores and genotypes.
+```
+#I want to know if DigitsForward scores are affected by COMT genotype and group membership
 
 options()$contrasts #to check the contrasts
 options(contrasts = c("contr.sum","contr.poly"))
 Anova(lm(DigitsForward ~ COMT2 * group_membership + Cancer_Treatments, data = clean_data), type = 3)
-
-#Not signficant
 
 #I want to know if DigitsBackward scores have an effect on COMT genotype and group membership
 
@@ -315,24 +323,19 @@ options()$contrasts #to check the contrasts
 options(contrasts = c("contr.sum","contr.poly"))
 Anova(lm(DigitsBackward ~ COMT2 * group_membership + Cancer_Treatments, data = clean_data), type = 3)
 
-#Not significant
-
-#I want to know if DigitsTotal scores have an effect on COMT genotype and group membership
+#I want to know if DigitsTotal scores are affected by COMT genotype and group membership
 
 options()$contrasts #to check the contrasts
 options(contrasts = c("contr.sum","contr.poly"))
 Anova(lm(DigitsTotal ~ COMT2 * group_membership + Cancer_Treatments, data = clean_data), type = 3)
 
-#Not significant, but there's a trend in the COMT2 scores 
-#Run a linear model maybe
-
 options(contrasts = c("contr.treatment", "contr.poly"))
 COMT_DigitsTotal <- lm(DigitsTotal ~ COMT2 * group_membership + Cancer_Treatments, data = clean_data)
 summary(COMT_DigitsTotal)
 
-#I want to know if RAVLT_learn scores have an effect on BDNF genotype and group membership
+#I want to know if RAVLT_learn scores are affected by BDNF genotype and group membership
 
-#To change reference groups
+#Remember, to change reference groups:
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("AMC","BSO-E2","BSO"))
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("BSO","BSO-E2","AMC"))
 
@@ -349,7 +352,7 @@ options(contrasts = c("contr.treatment", "contr.poly"))
 BDNF_RAVLT<- lm(RAVLT_Learn ~ BDNF_combined * group_membership + Cancer_Treatments, data = clean_data)
 summary(BDNF_RAVLT)
 
-#Logical Memory Immediate
+#I want to know if Logical Memory Immediate scores are affected by BDNF genotype and group membership
 options()$contrasts #to check the contrasts
 options(contrasts = c("contr.sum","contr.poly"))
 Anova(lm(LMA_Imm_Verbatim ~ BDNF_combined * group_membership + Cancer_Treatments, data = clean_data), type = 3)
@@ -358,7 +361,7 @@ options(contrasts = c("contr.treatment", "contr.poly"))
 BDNF_LMA_Imm_RAVLT<- lm(LMA_Imm_Verbatim ~ BDNF_combined * group_membership + Cancer_Treatments, data = clean_data)
 summary(BDNF_LMA_Imm_RAVLT)
 
-#Logical Memory Delayed
+#I want to know if Logical Memory Delayed scores are affected by BDNF genotype and group membership
 options()$contrasts #to check the contrasts
 options(contrasts = c("contr.sum","contr.poly"))
 Anova(lm(LMA_Del_Verbatim ~ BDNF_combined * group_membership + Cancer_Treatments, data = clean_data), type = 3)
@@ -370,16 +373,16 @@ summary(BDNF_LMA_Del_RAVLT)
 #To change the reference group
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("AMC","BSO-E2","BSO"))
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("BSO","BSO-E2","AMC"))
+```
+Step 9: Make visualisations for all the data. You can make a variety of graphs!
 
+First, make a graph for the E1G levels (a measure of how much estrogen is in a woman's body)
 
-#making  graphs ----
-
-
-#Make a graph for the E1G levels
-#make box plot for E1G levels
-#First make a graph theme that can be applied to all your graphs
+Make a graph theme that can be applied to all your graphs. Use the ```theme()``` function to determine the theme, inluding the ```element_text()``` function to decide the font for the graph text.
+```
 E1GTheme <- theme(plot.title= element_text(family = "Palatino", face = "bold")) #determining font
-
+```
+Next, make a boxplot using the ```ggplot()``` function.
 E1GPlot <- ggplot(clean_data, aes(X=group_membership, y = E1G, fill=group_membership)) + geom_boxplot(outlier.size = .8, lwd=1)
 print(E1GPlot + E1GTheme + labs(title="17-β-Estradiol Levels in Different Women Groups", 
                                 y = "Estrone-3-Glucoronide (ng/ml)", x="Group Membership",
