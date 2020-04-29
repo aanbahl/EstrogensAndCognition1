@@ -8,12 +8,15 @@ getwd()
 #setwd("C:/Users/RA/Desktop/Aanya Data")
 setwd("/Volumes/EC_RAs/Aanya - COMTBDNF/Aanya Data/")
 dir()
+```
+Step 2: read your files and merge them to create the dataset you want.
+```
 genotype_data <- read.csv("Genotype Data.csv")
 neuro_data <- read.csv("SOLVED Neuro Data January 22 2020.csv")
 dataset <- merge(genotype_data, neuro_data, by="ID")
 ```
 
-Step 2: Install packages
+Step 3: Install packages
 
 (I find that installing packages in the beginning of your code makes it cleaner) 
 ```
@@ -46,7 +49,7 @@ library(knitr)
 library(arsenal) 
 library(magrittr) 
 ```
-Step 3: Assign your group names! 
+Step 4: Assign your group names! 
 
 The BSO category should include women who have undergone a BSO and have never taken estradiol therapy.
 ```
@@ -82,7 +85,7 @@ If necessary, you can also set your white spaces into N/As.
 dataset_new[dataset_new == ""] <- NA
 View(dataset_new)
 ```
-Step 4: The BDNF data size is not that large, so merge the Heterozygotes and the Met Homozygotes into a single Met carrier category. Use the ```|``` operator to code for 'or'
+Step 5: The BDNF data size is not that large, so merge the Heterozygotes and the Met Homozygotes into a single Met carrier category. Use the ```|``` operator to code for 'or'
 ```
 # Adding BDNF Met Carriers to the dataset ----
 dataset_new$BDNF_combined[dataset_new$BDNF == "Val"] <- "Val"
@@ -94,7 +97,7 @@ clean_data <- dataset_new
 clean_data <- read.csv("clean_data.csv")
 ```
 
-Step 5: Get counts for demographic data table
+Step 6: Get counts for demographic data table
 
 Operators and Functions:
 
@@ -116,7 +119,7 @@ clean_data %>% group_by(group_membership, PdG) %>% tally()
 #get a tally for the cancner numbers
 clean_data %>% group_by(group_membership, Cancer_Treatments) %>% tally()
 ```
-Step 6: Calculate the mean and standard error for the demographic groups.
+Step 7: Calculate the mean and standard error for the demographic groups.
 
 Standard error = SD / sqrt(n-1)
 
@@ -157,7 +160,7 @@ clean_data %>% group_by(group_membership) %>% summarize(mean=mean(PdG, na.rm = T
                                                         n=length(Group),
                                                         sem=sd(PdG, na.rm = T)/sqrt(n-1)) 
 ```
-Step 7: Group comparison tests for the demographic data. Create a one factorial ANOVA for each group to see if there are any significant differences between groups. 
+Step 8: Group comparison tests for the demographic data. Create a one factorial ANOVA for each group to see if there are any significant differences between groups. 
 ```
 #Age
 attach(clean_data)
@@ -252,7 +255,7 @@ PT = dunnTest(E1G ~ group_membership,
               method="bonferroni")    
 PT
 ```
-Step 8: Compute a two factorial ANOVA between two independent variables, genotype and group membership.
+Step 9: Compute a two factorial ANOVA between two independent variables, genotype and group membership.
 
 Since the samples sizes in the groups are uneven, you need to do an unbalanced two way ANOVA on a linear model. 
 
@@ -374,7 +377,7 @@ summary(BDNF_LMA_Del_RAVLT)
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("AMC","BSO-E2","BSO"))
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("BSO","BSO-E2","AMC"))
 ```
-Step 9: Make visualisations for the E1G levels among the groups. You can make a variety of graphs!
+Step 10: Make visualisations for the E1G levels among the groups. You can make a variety of graphs!
 
 First, make a graph for the E1G levels (a measure of how much estrogen is in a woman's body)
 
@@ -430,7 +433,7 @@ print(E1GViolinplot
              y = "Estrone-3-Glucoronide (ng/ml)", x="Group Membership",
              fill = "Group Membership"))
 ```
-Step 10: Make visualisations for your neuropsych test results. 
+Step 11: Make visualisations for your neuropsych test results. 
 
 ```
 #Make a bar graph for COMT and SPWM
@@ -494,7 +497,7 @@ LMA_Del_VerbatimBar <-  ggplot(clean_data, aes(x=group_membership, y=LMA_Del_Ver
 
 print(LMA_Del_VerbatimBar + BarTheme)
 ```
-Step 11: Test whether the genotype frequencies are in accordance with Hardy-Weinberg equilibrium with the ```HWChisq()``` function. MM means Met/Met, VM means Val/Met, VV means Val/Val. The number next to each genotype denotes how many samples of that genotype we have.
+Step 12: Test whether the genotype frequencies are in accordance with Hardy-Weinberg equilibrium with the ```HWChisq()``` function. MM means Met/Met, VM means Val/Met, VV means Val/Val. The number next to each genotype denotes how many samples of that genotype we have.
 ```
 #Hardy Weinberg Test for COMT AMCs
 x <- c(MM=4,VM=11,VV=7) 
@@ -524,7 +527,7 @@ For more information, use the ```help()``` function to locate the information pa
 ```
 help(HardyWeinberg)
 ```
-Step 12: To cite the packages you used, use the ```citation()``` function.
+Step 13: To cite the packages you used, use the ```citation()``` function.
 ```
 citation("car")
 citation("HardyWeinberg")
