@@ -374,7 +374,7 @@ summary(BDNF_LMA_Del_RAVLT)
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("AMC","BSO-E2","BSO"))
 clean_data$group_membership <- factor(clean_data$group_membership, levels = c("BSO","BSO-E2","AMC"))
 ```
-Step 9: Make visualisations for all the data. You can make a variety of graphs!
+Step 9: Make visualisations for the E1G levels among the groups. You can make a variety of graphs!
 
 First, make a graph for the E1G levels (a measure of how much estrogen is in a woman's body)
 
@@ -382,22 +382,26 @@ Make a graph theme that can be applied to all your graphs. Use the ```theme()```
 ```
 E1GTheme <- theme(plot.title= element_text(family = "Palatino", face = "bold")) #determining font
 ```
-Next, make a boxplot using the ```ggplot()``` function.
+Next, make a boxplot using the ```ggplot()``` function. Use the```aes()``` function to make 'aesthetic mappings', which configure the visual settings (aesthetics) of your graph. Use the ```geom_boxplot()``` function to make the boxplot, and finally print both the boxplot and the theme together. 
+```
 E1GPlot <- ggplot(clean_data, aes(X=group_membership, y = E1G, fill=group_membership)) + geom_boxplot(outlier.size = .8, lwd=1)
 print(E1GPlot + E1GTheme + labs(title="17-β-Estradiol Levels in Different Women Groups", 
                                 y = "Estrone-3-Glucoronide (ng/ml)", x="Group Membership",
                                 fill = "Group Membership"))
-
-#Box plot with jittered points
-#Change outline colours by groups
-#Use a custom colour palette
+```
+You can also make a boxplot with jittered points. You can even change the colours if you want.
+```
 E1G_Boxplot <- ggboxplot(clean_data, x = "group_membership", y = "E1G",
                          color = "group_membership", palette =c("#00AFBB", "#E7B800", "#FC4E07"),
                          add = "jitter", shape = "group_membership", legend = "none")
 E1GTheme <- theme(plot.title= element_text(family = "Helvetica", size = (13), hjust = 0.5))
-
-my_comparisons <- list( c("BSO", "BSO-E2"), c("BSO-E2", "AMC"), c("BSO", "AMC") ) #if you want to include Kruskal-Wallis values 
-
+```
+If you want to compare Kruskal-Wallis p values, you can create a variable called ```my_comparisons``` and use the ``` list()``` function to denote which groups you are comparing.
+```
+my_comparisons <- list( c("BSO", "BSO-E2"), c("BSO-E2", "AMC"), c("BSO", "AMC") ) 
+```
+Finally, use the ```print()``` function to add all the graph elements together.
+```
 print(E1G_Boxplot
       + E1GTheme 
       + stat_compare_means(comparisons = my_comparisons) #if you want to include Kruskal-Wallis values
@@ -405,7 +409,9 @@ print(E1G_Boxplot
       + labs(title="17-β-Estradiol Levels in Different Women Groups", 
              y = "Estrone-3-Glucoronide (ng/ml)", x="Group Membership",
              fill = "Group Membership"))
-
+```
+You can also create a violin plot if you'd like with the ```ggplot()``` function.
+```
 #Violin plot
 E1GViolinplot <- ggviolin(clean_data, x = "group_membership", y = "E1G", fill = "group_membership",
                           palette = c("#00AFBB", "#E7B800", "#FC4E07"),
@@ -423,9 +429,11 @@ print(E1GViolinplot
       + labs(title="17-β-Estradiol Levels in Different Women Groups", 
              y = "Estrone-3-Glucoronide (ng/ml)", x="Group Membership",
              fill = "Group Membership"))
+```
+Step 10: Make visualisations for your neuropsych test results. 
 
+```
 #Make a bar graph for COMT and SPWM
-
 BarTheme <- theme(plot.title= element_text(family = "Helvetica", size = (13),hjust = 0.5),
                   panel.background = element_rect(fill = "white", size = 4),
                   axis.line = element_line(size = 0.5, colour = "black"),
@@ -439,8 +447,6 @@ SPWMBar <- ggplot(clean_data, aes(x=group_membership, y=SPWM_WME_T1, fill=COMT2)
   scale_fill_discrete(name = "COMT Genotype", labels = c("Val/Met", "Met/Met", "Val/Val"))
 
 print(SPWMBar + BarTheme)
-
-#?ggpar
 
 #Make a bar graph for COMT and DigitsForward
 DigitsForwardBar <- ggplot(clean_data, aes(x=group_membership, y=DigitsForward, fill=COMT2)) +
@@ -459,7 +465,6 @@ DigitsBackwardBar <- ggplot(clean_data, aes(x=group_membership, y=DigitsBackward
   scale_fill_discrete(name = "COMT Genotype", labels = c("Val/Met", "Met/Met", "Val/Val"))
 
 print(DigitsBackwardBar + BarTheme)
-
 
 
 #Make a bar graph for BDNF and RAVLT_Learn
@@ -488,39 +493,39 @@ LMA_Del_VerbatimBar <-  ggplot(clean_data, aes(x=group_membership, y=LMA_Del_Ver
   scale_fill_discrete(name = "BDNF Genotype", labels = c("Met Carrier", "Val/Val"))
 
 print(LMA_Del_VerbatimBar + BarTheme)
-
+```
+Step 11: Test whether the genotype frequencies are in accordance with Hardy-Weinberg equilibrium with the ```HWChisq()``` function. MM means Met/Met, VM means Val/Met, VV means Val/Val. The number next to each genotype denotes how many samples of that genotype we have.
+```
 #Hardy Weinberg Test for COMT AMCs
 x <- c(MM=4,VM=11,VV=7) 
 HW.test <- HWChisq(x, verbose=TRUE)
-#P value 0.79 therefore population in HWE, X2 = 0.0689
 
 #Hardy Weinberg Test for COMT BSOs
 x <- c(MM=6,VM=6,VV=5) 
 HW.test <- HWChisq(x, verbose=TRUE)
-#P value 0.39 therefore population in HWE, X2 = 0.7155
 
 #Hardy Weinberg Test for COMT BSO-E2s
 x <- c(MM=4,VM=7,VV=4) 
 HW.test <- HWChisq(x, verbose=TRUE)
-#P value 0.85 therefore population in HWE, X2 = 0.03
 
 #Hardy Weinberg Test for BDNF AMCs
 x <- c(MM=1,VM=3,VV=9) 
 HW.test <- HWChisq(x, verbose=TRUE)
-#P value 0.78 therefore population in HWE, X2 = 0.07
 
 #Hardy Weinberg Test for BDNF BSOs
 x <- c(MM=2,VM=5,VV=15) 
 HW.test <- HWChisq(x, verbose=TRUE)
-#P value 0.3 therefore population in HWE, X2 = 0.77
 
 #Hardy Weinberg Test for BDNF BSOE2s
 x <- c(MM=0,VM=2,VV=11) 
 HW.test <- HWChisq(x, verbose=TRUE)
-#P value is 0.12 therefore population in HWE, X2 = 2.4
-
+```
+For more information, use the ```help()``` function to locate the information page. 
+```
 help(HardyWeinberg)
-
+```
+Step 12: To cite the packages you used, use the ```citation()``` function.
+```
 citation("car")
 citation("HardyWeinberg")
-
+```
